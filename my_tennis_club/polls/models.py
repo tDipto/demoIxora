@@ -11,10 +11,16 @@ class Choice(models.Model):
     choice_text = models.CharField(max_length=200)
     votes = models.IntegerField(default=0)
 
+########################################################################
+
+
+class Student(models.Model):
+    name = models.CharField(max_length=200)
+    year = models.IntegerField()
 
 
 
-    #
+########################################################################    #
 class User(models.Model):
     user_id = models.IntegerField(default=0)
     user_name = models.CharField(max_length=200)
@@ -42,6 +48,7 @@ class Time(models.Model):
      year = models.PositiveIntegerField()
      month = models.PositiveIntegerField(default=0)
      day = models.CharField(max_length=200)
+
 class Price(models.Model):
     price_id = models.IntegerField(default=0)
     user_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
