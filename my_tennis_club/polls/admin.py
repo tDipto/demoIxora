@@ -2,9 +2,21 @@ from django.contrib import admin
 
 from .models import Product,Location,Time,Price,User
 
+class ShowProduct(admin.ModelAdmin):
+    list_display = ['product_name']
+    
+class ShowDistrict(admin.ModelAdmin):
+    list_display = ['district']
 
-admin.site.register(Product)
-admin.site.register(Location)
+class ShowUser(admin.ModelAdmin):
+    list_display = ['user_name']
+
+class ShowPrice(admin.ModelAdmin):
+    list_display = ['product_id_foreign','location_id_foreign','time_id_foreign']
+
+
+admin.site.register(Product,ShowProduct)
+admin.site.register(Location,ShowDistrict)
 admin.site.register(Time)
-admin.site.register(Price)
-admin.site.register(User)
+admin.site.register(Price,ShowPrice)
+admin.site.register(User,ShowUser)
