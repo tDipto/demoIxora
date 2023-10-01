@@ -33,7 +33,6 @@ class ProductDetailAPI(RetrieveUpdateDestroyAPIView):
 
 class PriceUpdateAPI(ListCreateAPIView):
     queryset = Price.objects.all()
-    # serializer_class = PriceSerializer
 
 
     def get_serializer_class(self):
@@ -68,8 +67,6 @@ class PriceUpdateAPI(ListCreateAPIView):
 class GetSingleProductPriceAPI(ListCreateAPIView):
     serializer_class = PriceSerializer
 
-    def get_queryset(self):
-       pass
 
     def get(self, request, product_id, location_id, year=None, month=None, day=None):
         location = Location.objects.get(id=location_id)
@@ -121,9 +118,6 @@ class GetSingleProductPriceAPI(ListCreateAPIView):
 
 class GetAllProductPriceAPI(ListCreateAPIView):
     serializer_class = PriceSerializer
-
-    def get_queryset(self):
-        pass
 
     def get(self, request, location_id, year=None, month=None, day=None):
         location = Location.objects.get(id=location_id)
@@ -185,9 +179,6 @@ class GetAllProductPriceAPI(ListCreateAPIView):
 
 class GetGraphAPI(ListCreateAPIView):
     serializer_class = PriceSerializer
-
-    def get_queryset(self):
-        pass
 
     def get(self, request, product_id, location_id, Syear=None, Eyear=None, Smonth=None, Emonth=None, Sday=None, Eday=None):
         location = Location.objects.get(id=location_id)
