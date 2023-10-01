@@ -64,9 +64,5 @@ class Price(models.Model):
     product_id_foreign = models.ForeignKey(Product, on_delete=models.CASCADE)
     location_id_foreign = models.ForeignKey(Location, on_delete=models.CASCADE) 
 
-    # def save(self, *args, **kwargs):
-    #     if not self.pk:  
-    #         self.time_id_foreign = Time.objects.create()
-    #     super().save(*args, **kwargs)
     def __str__(self):
         return f"Product: {self.product_id_foreign},Price: {self.user_price}, Location: {self.location_id_foreign}, Time: {self.time_id_foreign}"

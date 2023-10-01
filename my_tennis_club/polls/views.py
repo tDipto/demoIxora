@@ -30,24 +30,8 @@ class ProductDetailAPI(RetrieveUpdateDestroyAPIView):
     serializer_class = ProductSerializer
     lookup_field = 'id'
 
-class UserAPI(ListCreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
-class UserDetailAPI(RetrieveUpdateDestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    lookup_field = 'id'
-# 
-# class PriceAPI(ListCreateAPIView):
-#     queryset = Price.objects.all()
-#     serializer_class = PriceSerializer
-
-#     def perform_create(self, serializer):
-#         time_instance = Time.objects.create()
-#         serializer.save(time_id_foreign=time_instance)
-
-class PriceAPI(ListCreateAPIView):
+class PriceUpdateAPI(ListCreateAPIView):
     queryset = Price.objects.all()
     # serializer_class = PriceSerializer
 
@@ -80,14 +64,8 @@ class PriceAPI(ListCreateAPIView):
             time_id_foreign=current_time
         )
 
-
-class PriceDetailAPI(RetrieveUpdateDestroyAPIView):
-    queryset = Price.objects.all()
-    serializer_class = PriceSerializer
-    lookup_field = 'id'
-
     
-class GetSingleAPI(ListCreateAPIView):
+class GetSingleProductPriceAPI(ListCreateAPIView):
     serializer_class = PriceSerializer
 
     def get_queryset(self):
@@ -141,7 +119,7 @@ class GetSingleAPI(ListCreateAPIView):
     
 
 
-class GetAllAPI(ListCreateAPIView):
+class GetAllProductPriceAPI(ListCreateAPIView):
     serializer_class = PriceSerializer
 
     def get_queryset(self):
@@ -211,9 +189,7 @@ class GetGraphAPI(ListCreateAPIView):
     def get_queryset(self):
         pass
 
-
-    def get(self, request, product_id, location_id, Syear=None, Eyear=None, Smonth=None, Emonth=None, Sday=None, Eday=None):                 
-        
+    def get(self, request, product_id, location_id, Syear=None, Eyear=None, Smonth=None, Emonth=None, Sday=None, Eday=None):
         location = Location.objects.get(id=location_id)
         product = Product.objects.get(id=product_id)
 
@@ -230,6 +206,22 @@ class GetGraphAPI(ListCreateAPIView):
             'date_range_stats': {}
         }
 
+        def generate_stats(queryset):
+            price_stats = queryset.aggregate(
+                avg_price=Avg('user_price'),
+                max_price=Max('user_price'),
+                min_price=Min('user_price')
+            )
+
+            return {
+                'max_price': price_stats['max_price'],
+                'min_price': price_stats['min_price'],
+                'avg_price': price_stats['avg_price'],
+            }
+
+        def process_date_range(queryset, date_range_key):
+            if date_range_key not in response_data['date_range_stats']:
+                response_data['date_range_stats'][date_range_key] = generate_stats(queryset)
 
         if not Eyear:
             if not Syear:
@@ -244,41 +236,17 @@ class GetGraphAPI(ListCreateAPIView):
                                 time_id_foreign__day=d
                             )
 
-                            price_stats = queryset.aggregate(
-                                avg_price=Avg('user_price'),
-                                max_price=Max('user_price'),
-                                min_price=Min('user_price')
-                            )
-
-                            daily_stats = {
-                                'max_price': price_stats['max_price'],
-                                'min_price': price_stats['min_price'],
-                                'avg_price': price_stats['avg_price'],
-                            }
-
-                            response_data['date_range_stats'][f'{m}-{d}'] = daily_stats
+                            process_date_range(queryset, f'{m}-{d}')
                 else:
                     # Smonth - Emonth
                     for m in range(int(Smonth), int(Emonth) + 1):
-                            queryset = Price.objects.filter(
-                                product_id_foreign=product_id,
-                                location_id_foreign=location_id,
-                                time_id_foreign__month=m,
-                            )
+                        queryset = Price.objects.filter(
+                            product_id_foreign=product_id,
+                            location_id_foreign=location_id,
+                            time_id_foreign__month=m,
+                        )
 
-                            price_stats = queryset.aggregate(
-                                avg_price=Avg('user_price'),
-                                max_price=Max('user_price'),
-                                min_price=Min('user_price')
-                            )
-
-                            daily_stats = {
-                                'max_price': price_stats['max_price'],
-                                'min_price': price_stats['min_price'],
-                                'avg_price': price_stats['avg_price'],
-                            }
-
-                            response_data['date_range_stats'][f'{m}'] = daily_stats
+                        process_date_range(queryset, f'{m}')
             else:
                 # Syear/month - Syear/month
                 for y in range(int(Syear), int(Syear) + 1):
@@ -290,19 +258,7 @@ class GetGraphAPI(ListCreateAPIView):
                             time_id_foreign__month=m
                         )
 
-                        price_stats = queryset.aggregate(
-                            avg_price=Avg('user_price'),
-                            max_price=Max('user_price'),
-                            min_price=Min('user_price')
-                        )
-
-                        daily_stats = {
-                            'max_price': price_stats['max_price'],
-                            'min_price': price_stats['min_price'],
-                            'avg_price': price_stats['avg_price'],
-                        }
-
-                        response_data['date_range_stats'][f'{y}-{m}'] = daily_stats
+                        process_date_range(queryset, f'{y}-{m}')
         else:
             for y in range(int(Syear), int(Eyear) + 1):
                 queryset = Price.objects.filter(
@@ -311,18 +267,9 @@ class GetGraphAPI(ListCreateAPIView):
                     time_id_foreign__year=y
                 )
 
-                price_stats = queryset.aggregate(
-                    avg_price=Avg('user_price'),
-                    max_price=Max('user_price'),
-                    min_price=Min('user_price')
-                )
-
-                daily_stats = {
-                    'max_price': price_stats['max_price'],
-                    'min_price': price_stats['min_price'],
-                    'avg_price': price_stats['avg_price'],
-                }
-
-                response_data['date_range_stats'][f'{y}'] = daily_stats
+                process_date_range(queryset, f'{y}')
 
         return Response(response_data)
+
+
+        
