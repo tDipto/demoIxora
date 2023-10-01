@@ -40,6 +40,8 @@ INSTALLED_APPS = [
 
     "polls.apps.PollsConfig",
     "new.apps.NewConfig",
+    'rest_framework.authtoken',  
+
 ]
 
 MIDDLEWARE = [

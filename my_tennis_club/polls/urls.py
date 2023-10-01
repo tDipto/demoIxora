@@ -1,9 +1,35 @@
-from django.urls import path
+# from django.urls import path
 
-from polls.views import StudentCall,LocationListAPI
+# from polls.views import LocationListAPI
+
+# urlpatterns = [
+    # path("", views.index, name="index"),
+    # path("student/", StudentCall.as_view(), name="StudentCall"),
+     #path("location/", LocationListAPI.as_view(), name="LocationListAPI"),
+    # path("user/", UserListAPI.as_view(), name="UserListAPI"),
+    # path("time/",TimeListAPI.as_view(), name="TimeListAPI"),
+    # #path("product/", ProductListAPI.as_view(), name="ProductListAPI"),
+    # path("prices/", UserPricesAPI.as_view(), name="UserPricesAPI"),
+    #path('signup/', views.signup, name='signup'),
+    #]
+
+# urlpatterns = [
+ 
+#     path('admin/', admin.site.urls),
+ 
+#     ##### user related path##########################
+#     path('', include('user.urls')),
+#     path('login/', user_view.Login, name ='login'),
+#     path('logout/', auth.LogoutView.as_view(template_name ='user/index.html'), name ='logout'),
+#     path('register/', user_view.register, name ='register'),
+ 
+# ]
+from django.urls import path
+from polls.views import UserSignupAPI,UserLoginAPI
 
 urlpatterns = [
-    # path("", views.index, name="index"),
-    path("student/", StudentCall.as_view(), name="StudentCall"),
-    path("location/", LocationListAPI.as_view(), name="LocationListAPI"),
+    # ... other URL patterns for your app ...
+    path('signup/', UserSignupAPI.as_view(), name='signup'),
+    path('signin/', UserLoginAPI.as_view(), name='signin'),
+
 ]
