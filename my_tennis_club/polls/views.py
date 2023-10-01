@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from .serializers import ProductSerializer,LocationSerializer,UserSerializer,PriceSerializer,PriceSerializer2
 from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView
 from .models import Product,Location,User,Price,Time
-from django.db.models import Avg
+from django.db.models import Avg, Max, Min
 
 
 
@@ -90,9 +90,8 @@ class PriceDetailAPI(RetrieveUpdateDestroyAPIView):
 class GetSingleAPI(ListCreateAPIView):
     serializer_class = PriceSerializer
 
-    # def get_queryset(self):
-    #     product_id = self.kwargs['product_id']
-    #     return Price.objects.filter(product_id_foreign=product_id)
+    def get_queryset(self):
+       pass
 
     def get(self, request, product_id, location_id, year=None, month=None, day=None):
         location = Location.objects.get(id=location_id)
@@ -121,20 +120,23 @@ class GetSingleAPI(ListCreateAPIView):
         if year and month and day:
             queryset = queryset.filter(time_id_foreign__day=day)
         
-        average_price = queryset.aggregate(avg_price=Avg('user_price'))
-        
+        price_stats = queryset.aggregate(
+                avg_price=Avg('user_price'),
+                max_price=Max('user_price'),
+                min_price=Min('user_price')
+            )
+ 
         response_data = {
-            'place_name': location.district,  # Change this to the actual field name for place_name
+            'place_name': location.district, 
             'product_name': product.product_name,
-            'average_price': average_price['avg_price'],
+            'average_price': price_stats['avg_price'],
+            'max_price': price_stats['max_price'],
+            'min_price': price_stats['min_price'],
+            'year': int(year) if year else None,
+            'month': int(month) if month else None,
+            'day': int(day) if day else None,
         }
-        if year is not None:
-            response_data['year'] = int(year)
-        if month is not None:
-            response_data['month'] = int(month)
-        if day is not None:
-            response_data['day'] = int(day)
-        
+    
         return Response(response_data)
     
 
@@ -142,16 +144,13 @@ class GetSingleAPI(ListCreateAPIView):
 class GetAllAPI(ListCreateAPIView):
     serializer_class = PriceSerializer
 
-    # def get_queryset(self):
-    #     product_id = self.kwargs['product_id']
-    #     return Price.objects.filter(product_id_foreign=product_id)
+    def get_queryset(self):
+        pass
 
     def get(self, request, location_id, year=None, month=None, day=None):
         location = Location.objects.get(id=location_id)
-        product = Product.objects.all()
-
-        queryset = Price.objects.filter(location_id_foreign=location_id)
-
+        products = Product.objects.all()
+        result = []
 
         year = request.query_params.get('year')
         month = request.query_params.get('month')
@@ -163,38 +162,167 @@ class GetAllAPI(ListCreateAPIView):
             month = current_date.month
             day = current_date.day
 
-        products = Product.objects.all()
-        result = []
+        response_data = {
+            'location': location.district,
+            'year': int(year) if year else None,
+            'month': int(month) if month else None,
+            'day': int(day) if day else None,
+            'products': []
+        }
+
+        queryset = Price.objects.filter(location_id_foreign=location_id)
+        if year:
+            queryset = queryset.filter(time_id_foreign__year=year)
+        if month:
+            queryset = queryset.filter(time_id_foreign__month=month)
+        if day:
+            queryset = queryset.filter(time_id_foreign__day=day)
 
         for product in products:
-            queryset = Price.objects.filter(
-                product_id_foreign=product.id,
+            queryset = queryset.filter(product_id_foreign=product.id)
+
+            price_stats = queryset.aggregate(
+                avg_price=Avg('user_price'),
+                max_price=Max('user_price'),
+                min_price=Min('user_price')
             )
-       
-        
-            if year:
-                queryset = queryset.filter(time_id_foreign__year=year)
-            if year and month:
-                queryset = queryset.filter(time_id_foreign__month=month)
-            if year and month and day:
-                queryset = queryset.filter(time_id_foreign__day=day)
-            
-            average_price = queryset.aggregate(avg_price=Avg('user_price'))
-            
-            response_data = {
-                'place_name': location.district,  # Change this to the actual field name for place_name
+
+            product_data = {
                 'product_name': product.product_name,
-                'average_price': average_price['avg_price'],
+                'average_price': price_stats['avg_price'],
+                'max_price': price_stats['max_price'],
+                'min_price': price_stats['min_price'],
             }
-            if year is not None:
-                response_data['year'] = int(year)
-            if month is not None:
-                response_data['month'] = int(month)
-            if day is not None:
-                response_data['day'] = int(day)
 
-            result.append(response_data)
 
+            response_data['products'].append(product_data)
+
+        result.append(response_data)
+
+        return Response(result)
+
+
+
+
+
+class GetGraphAPI(ListCreateAPIView):
+    serializer_class = PriceSerializer
+
+    def get_queryset(self):
+        pass
+
+
+    def get(self, request, product_id, location_id, Syear=None, Eyear=None, Smonth=None, Emonth=None, Sday=None, Eday=None):                 
         
-        return Response(response_data)
+        location = Location.objects.get(id=location_id)
+        product = Product.objects.get(id=product_id)
 
+        Syear = request.query_params.get('Syear')
+        Eyear = request.query_params.get('Eyear')
+        Smonth = request.query_params.get('Smonth')
+        Emonth = request.query_params.get('Emonth')
+        Sday = request.query_params.get('Sday')
+        Eday = request.query_params.get('Eday')
+
+        response_data = {
+            'product': product.product_name,
+            'location': location.district,
+            'date_range_stats': {}
+        }
+
+
+        if not Eyear:
+            if not Syear:
+                if not Emonth:
+                    # Smonth/day - Smonth/day
+                    for m in range(int(Smonth), int(Smonth) + 1):
+                        for d in range(int(Sday), int(Eday) + 1):
+                            queryset = Price.objects.filter(
+                                product_id_foreign=product_id,
+                                location_id_foreign=location_id,
+                                time_id_foreign__month=m,
+                                time_id_foreign__day=d
+                            )
+
+                            price_stats = queryset.aggregate(
+                                avg_price=Avg('user_price'),
+                                max_price=Max('user_price'),
+                                min_price=Min('user_price')
+                            )
+
+                            daily_stats = {
+                                'max_price': price_stats['max_price'],
+                                'min_price': price_stats['min_price'],
+                                'avg_price': price_stats['avg_price'],
+                            }
+
+                            response_data['date_range_stats'][f'{m}-{d}'] = daily_stats
+                else:
+                    # Smonth - Emonth
+                    for m in range(int(Smonth), int(Emonth) + 1):
+                            queryset = Price.objects.filter(
+                                product_id_foreign=product_id,
+                                location_id_foreign=location_id,
+                                time_id_foreign__month=m,
+                            )
+
+                            price_stats = queryset.aggregate(
+                                avg_price=Avg('user_price'),
+                                max_price=Max('user_price'),
+                                min_price=Min('user_price')
+                            )
+
+                            daily_stats = {
+                                'max_price': price_stats['max_price'],
+                                'min_price': price_stats['min_price'],
+                                'avg_price': price_stats['avg_price'],
+                            }
+
+                            response_data['date_range_stats'][f'{m}'] = daily_stats
+            else:
+                # Syear/month - Syear/month
+                for y in range(int(Syear), int(Syear) + 1):
+                    for m in range(int(Smonth), int(Emonth) + 1):
+                        queryset = Price.objects.filter(
+                            product_id_foreign=product_id,
+                            location_id_foreign=location_id,
+                            time_id_foreign__year=y,
+                            time_id_foreign__month=m
+                        )
+
+                        price_stats = queryset.aggregate(
+                            avg_price=Avg('user_price'),
+                            max_price=Max('user_price'),
+                            min_price=Min('user_price')
+                        )
+
+                        daily_stats = {
+                            'max_price': price_stats['max_price'],
+                            'min_price': price_stats['min_price'],
+                            'avg_price': price_stats['avg_price'],
+                        }
+
+                        response_data['date_range_stats'][f'{y}-{m}'] = daily_stats
+        else:
+            for y in range(int(Syear), int(Eyear) + 1):
+                queryset = Price.objects.filter(
+                    product_id_foreign=product_id,
+                    location_id_foreign=location_id,
+                    time_id_foreign__year=y
+                )
+
+                price_stats = queryset.aggregate(
+                    avg_price=Avg('user_price'),
+                    max_price=Max('user_price'),
+                    min_price=Min('user_price')
+                )
+
+                daily_stats = {
+                    'max_price': price_stats['max_price'],
+                    'min_price': price_stats['min_price'],
+                    'avg_price': price_stats['avg_price'],
+                }
+
+                response_data['date_range_stats'][f'{y}'] = daily_stats
+
+        return Response(response_data)
