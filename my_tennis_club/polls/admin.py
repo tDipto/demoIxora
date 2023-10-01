@@ -6,13 +6,13 @@ class ShowProduct(admin.ModelAdmin):
     list_display = ['product_name']
     
 class ShowDistrict(admin.ModelAdmin):
-    list_display = ['district']
+    list_display = ['district','thana']
 
 class ShowUser(admin.ModelAdmin):
     list_display = ['user_name']
 
 class ShowPrice(admin.ModelAdmin):
-    list_display = ['product_id_foreign','location_id_foreign','time_id_foreign']
+    list_display = ['product_id_foreign','user_price','location_id_foreign','time_id_foreign']
 
 
 admin.site.register(Product,ShowProduct)

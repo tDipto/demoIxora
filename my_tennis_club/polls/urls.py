@@ -17,5 +17,6 @@ urlpatterns = [
     path("price/<int:id>/", views.PriceDetailAPI.as_view(), name="PriceDetailAPI"),
 
     path("getprice/<int:product_id>/<int:location_id>/", views.GetSingleAPI.as_view(), name="GetSingleAPI"),
+    path("getprice/<int:location_id>/", views.GetAllAPI.as_view(), name="GetAllAPI"),
 
 ]

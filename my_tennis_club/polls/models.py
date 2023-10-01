@@ -46,8 +46,7 @@ class Location(models.Model):
     thana = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.district
-    
+        return f"district: {self.district}, thana: {self.thana}"    
 
 class Time(models.Model):
     year = models.PositiveIntegerField()
@@ -56,7 +55,7 @@ class Time(models.Model):
     hour = models.PositiveSmallIntegerField()
 
     def __str__(self):
-        return f"month: {self.month}, day: {self.day}, hour: {self.hour}"
+        return f"year: {self.year}, month: {self.month}, day: {self.day}, hour: {self.hour}"
 
 class Price(models.Model):
     user_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -70,4 +69,4 @@ class Price(models.Model):
     #         self.time_id_foreign = Time.objects.create()
     #     super().save(*args, **kwargs)
     def __str__(self):
-        return f"Price for Product: {self.product_id_foreign}, Location: {self.location_id_foreign}, Time: {self.time_id_foreign}"
+        return f"Product: {self.product_id_foreign},Price: {self.user_price}, Location: {self.location_id_foreign}, Time: {self.time_id_foreign}"
