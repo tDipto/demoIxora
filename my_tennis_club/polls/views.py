@@ -52,12 +52,12 @@ class LocationDetailAPI(RetrieveUpdateDestroyAPIView):
 
 
 class ProductAPI(ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
 class ProductDetailAPI(RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     lookup_field = 'id'

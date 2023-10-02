@@ -12,6 +12,8 @@ class Product(models.Model):
     product_type = models.CharField(max_length=200)
     description = models.CharField(max_length=200)
     quantity = models.IntegerField(default=0)
+    product_image = models.ImageField(upload_to='img/',max_length=250,null=True,default=None)
+
     def __str__(self):
         return self.product_name
 
