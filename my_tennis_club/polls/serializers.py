@@ -1,8 +1,9 @@
 from rest_framework import serializers
 from .models import Location,Product,Price
 from django.contrib.auth.models import User
-from django.contrib.auth.password_validation import validate_password
-from django.core import exceptions
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import authenticate
+
 
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -68,6 +69,30 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 
-class UserLoginSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=200)
-    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        username = attrs.get(self.username_field)
+        password = attrs.get("password")
+
+        if username and password:
+            user = authenticate(
+                request=self.context.get("request"),
+                username=username,
+                password=password,
+            )
+
+            if user is None:
+                raise serializers.ValidationError(
+                    "No user with the provided username and password was found."
+                )
+        else:
+            raise serializers.ValidationError(
+                "Both username and password are required fields."
+            )
+
+        data = super().validate(attrs)
+        return data
+
+# class UserLoginSerializer(serializers.Serializer):
+#     username = serializers.CharField(max_length=200)
+#     password = serializers.CharField(write_only=True, style={'input_type': 'password'})

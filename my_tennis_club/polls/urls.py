@@ -5,7 +5,7 @@ from . import views
 urlpatterns = [
 
     path('signup/',views.UserSignupAPI.as_view(),name="UserSignupAPI"),
-    # path('signin/',views.UserLoginAPI.as_view(),name="UserLoginAPI"),
+    path('signin/',views.SignInAPI.as_view(),name="SignInAPI"),
 
     path("location/", views.LocationAPI.as_view(), name="LocationAPI"),
     path("location/<int:id>/", views.LocationDetailAPI.as_view(), name="LocationDetailAPI"),

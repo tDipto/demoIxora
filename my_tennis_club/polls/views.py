@@ -1,29 +1,36 @@
 import datetime
 from rest_framework.response import Response
 from django.http import HttpResponse
-from .serializers import ProductSerializer,LocationSerializer,PriceSerializer,PriceSerializer2,UserSerializer
-
+from .serializers import ProductSerializer,LocationSerializer,PriceSerializer,PriceSerializer2,UserSerializer,CustomTokenObtainPairSerializer
+from rest_framework.views import APIView
 from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView
 from .models import Product,Location,Price,Time
 from django.db.models import Avg, Max, Min
-from django.db import IntegrityError
-from rest_framework.authtoken.models import Token 
-from django.contrib.auth import authenticate
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+from rest_framework.permissions import IsAuthenticated
+# from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+# from rest_framework_jwt.authentication import JSONWebTokenAuthenticationV2 as JSONWebTokenAuthentication
+
 
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index.")
-
 
 
 class UserSignupAPI(ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+
+class SignInAPI(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
 class LocationAPI(ListCreateAPIView):
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
+    # authentication_classes = [JSONWebTokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
 class LocationDetailAPI(RetrieveUpdateDestroyAPIView):
     queryset = Location.objects.all()
@@ -32,13 +39,16 @@ class LocationDetailAPI(RetrieveUpdateDestroyAPIView):
 
 
 class ProductAPI(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
 class ProductDetailAPI(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     lookup_field = 'id'
+    
 
 
 class PriceUpdateAPI(ListCreateAPIView):
@@ -75,6 +85,7 @@ class PriceUpdateAPI(ListCreateAPIView):
 
     
 class GetSingleProductPriceAPI(ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = PriceSerializer
 
 
