@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Product,Location,Time,Price
+from .models import Product,Location,Time,Price,OTP
 
 class ShowProduct(admin.ModelAdmin):
     list_display = ['product_name']
@@ -19,4 +19,5 @@ admin.site.register(Product,ShowProduct)
 admin.site.register(Location,ShowDistrict)
 admin.site.register(Time)
 admin.site.register(Price,ShowPrice)
+admin.site.register(OTP)
 # admin.site.register(User,ShowUser)

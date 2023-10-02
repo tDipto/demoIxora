@@ -8,6 +8,9 @@ urlpatterns = [
     path('signin/',views.SignInAPI.as_view(),name="SignInAPI"),
     path('signin/<str:username>',views.ShowSignInAPI.as_view(),name="ShowSignInAPI"),
 
+    path('verify-otp/<str:username>/', views.OTPVerificationAPI.as_view(), name='otp-verification'),
+
+
     path("location/", views.LocationAPI.as_view(), name="LocationAPI"),
     path("location/<int:id>/", views.LocationDetailAPI.as_view(), name="LocationDetailAPI"),
 

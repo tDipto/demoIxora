@@ -12,7 +12,6 @@ class Product(models.Model):
     product_type = models.CharField(max_length=200)
     description = models.CharField(max_length=200)
     quantity = models.IntegerField(default=0)
-    # product_image = models.ImageField(upload_to='user_images/')
     def __str__(self):
         return self.product_name
 
@@ -41,3 +40,13 @@ class Price(models.Model):
 
     def __str__(self):
         return f"Product: {self.product_id_foreign},Price: {self.user_price}, Location: {self.location_id_foreign}, Time: {self.time_id_foreign}"
+    
+
+
+class OTP(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    otp = models.CharField(max_length=4)
+    is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.otp} (Verified: {self.is_verified})"

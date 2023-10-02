@@ -1,10 +1,10 @@
 import datetime
 from rest_framework.response import Response
 from django.http import HttpResponse
-from .serializers import ProductSerializer,LocationSerializer,PriceSerializer,PriceSerializer2,UserSerializer,CustomTokenObtainPairSerializer,ShowUserSerializer
+from .serializers import ProductSerializer,LocationSerializer,PriceSerializer,PriceSerializer2,UserSerializer,CustomTokenObtainPairSerializer,ShowUserSerializer,OTPVerificationSerializer
 from rest_framework.views import APIView
-from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView
-from .models import Product,Location,Price,Time
+from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView,GenericAPIView
+from .models import Product,Location,Price,Time,OTP
 from django.db.models import Avg, Max, Min
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -21,6 +21,13 @@ def index(request):
 class UserSignupAPI(ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    # def create(self, request, *args, **kwargs):
+    #     serializer = self.get_serializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response({"message": "User registered successfully."})
+    #     return Response(serializer.errors)
 
 
 class SignInAPI(TokenObtainPairView):
@@ -91,7 +98,7 @@ class PriceUpdateAPI(ListCreateAPIView):
 
     
 class GetSingleProductPriceAPI(ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     serializer_class = PriceSerializer
 
 
@@ -294,3 +301,27 @@ class GetGraphAPI(ListCreateAPIView):
 
 
         
+
+from django.shortcuts import get_object_or_404
+
+
+class OTPVerificationAPI(GenericAPIView):
+    serializer_class = OTPVerificationSerializer
+
+    def put(self, request, username, *args, **kwargs):
+        otp_entry = get_object_or_404(OTP, user__username=username)
+
+        
+        if 'otp' not in request.data:
+            return Response({'detail': 'OTP is required in the request'})
+
+        serializer = self.get_serializer(otp_entry, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            if serializer.validated_data.get('otp') == otp_entry.otp:
+                otp_entry.is_verified = True
+                otp_entry.save()
+                return Response({'detail': 'OTP verification successful'})
+            else:
+                return Response({'detail': 'Invalid OTP'})
+        return Response(serializer.errors)
