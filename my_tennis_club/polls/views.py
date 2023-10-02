@@ -1,7 +1,7 @@
 import datetime
 from rest_framework.response import Response
 from django.http import HttpResponse
-from .serializers import ProductSerializer,LocationSerializer,PriceSerializer,PriceSerializer2,UserSerializer,CustomTokenObtainPairSerializer
+from .serializers import ProductSerializer,LocationSerializer,PriceSerializer,PriceSerializer2,UserSerializer,CustomTokenObtainPairSerializer,ShowUserSerializer
 from rest_framework.views import APIView
 from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView
 from .models import Product,Location,Price,Time
@@ -25,6 +25,12 @@ class UserSignupAPI(ListCreateAPIView):
 
 class SignInAPI(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+class ShowSignInAPI(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = User.objects.all()
+    serializer_class = ShowUserSerializer
+    lookup_field = 'username'
 
 class LocationAPI(ListCreateAPIView):
     queryset = Location.objects.all()

@@ -93,6 +93,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         return data
 
-# class UserLoginSerializer(serializers.Serializer):
-#     username = serializers.CharField(max_length=200)
-#     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+class ShowUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+
+
+
+
