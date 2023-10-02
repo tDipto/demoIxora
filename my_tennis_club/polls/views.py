@@ -1,60 +1,71 @@
 from django.http import HttpResponse
-from .serializers import LocationSerializer,ProductSerializer,PriceSerializer,TimeSerializer
+from .serializers import LocationSerializer,ProductSerializer,PriceSerializer,TimeSerializer,UserSerializer,CustomTokenObtainPairSerializer
+from .serializers import ShowUserSerializer
 from rest_framework.generics import ListAPIView,ListCreateAPIView,RetrieveUpdateDestroyAPIView
 from .models import Location,User,Product,Price,Time
 from rest_framework.response import Response
-from .serializers import UserRegistrationSerializer
+
 from rest_framework import status
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 
 
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from .serializers import UserRegistrationSerializer,UserLoginSerializer
-from django.db import IntegrityError
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.permissions import IsAuthenticated
+# from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+# from rest_framework_jwt.authentication import JSONWebTokenAuthenticationV2 as JSONWebTokenAuthentication
 
-class UserSignupAPI(APIView):
-    def post(self, request):
+
+class UserSignupAPI(ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class SignInAPI(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+
+class ShowSignInAPI(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = User.objects.all()
+    serializer_class = ShowUserSerializer
+    lookup_field = 'username'
+
+
+
+class ProductAPI(ListCreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+
+class ProductDetailAPI(RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'id'
+
+
+class LocationListAPI(RetrieveUpdateDestroyAPIView):
+    # authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id):
         try:
-            serializer = UserRegistrationSerializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({"message": "User registered successfully."}, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except IntegrityError:
-            return Response({"message": "Username already exists."}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-from rest_framework.authtoken.models import Token 
-from django.contrib.auth import authenticate
-
-class UserLoginAPI(APIView):
-    def post(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            username = serializer.validated_data['username']
-            password = serializer.validated_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                token, created = Token.objects.get_or_create(user=user)
-                return Response({"token": token.key}, status=status.HTTP_200_OK)
-            else:
-                return Response({"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+            location = Location.objects.get(pk=id)
+            serializer = LocationSerializer(location)
+            return Response(serializer.data)
+        except Location.DoesNotExist:
+            return Response({"message": "Location not found"}, status=404)
 
 # class StudentCall(ListAPIView):
 #     queryset = Student.objects.all()
 #     serializer_class = StudentSerializer
 
-# class LocationListAPI(ListAPIView):
+# class LocationListAPI(RetrieveUpdateDestroyAPIView):
 #     model = Location
 #     serializer_class = LocationSerializer
 #     queryset = Location.objects.all()
+#     lookup_field = 'id'
+
 
 # class UserListAPI(ListAPIView):
 #     model = User
