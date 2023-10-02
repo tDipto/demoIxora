@@ -1,46 +1,25 @@
 import datetime
 from rest_framework.response import Response
 from django.http import HttpResponse
-from .serializers import ProductSerializer,LocationSerializer,PriceSerializer,PriceSerializer2,UserRegistrationSerializer,UserLoginSerializer
-from rest_framework.views import APIView
+from .serializers import ProductSerializer,LocationSerializer,PriceSerializer,PriceSerializer2,UserSerializer
 
 from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView
-from .models import Product,Location,User,Price,Time
+from .models import Product,Location,Price,Time
 from django.db.models import Avg, Max, Min
 from django.db import IntegrityError
 from rest_framework.authtoken.models import Token 
 from django.contrib.auth import authenticate
-
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index.")
 
 
-class UserSignupAPI(ListCreateAPIView):
-    def post(self, request):
-        try:
-            serializer = UserRegistrationSerializer(data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({"message": "User registered successfully."})
-            return Response(serializer.errors)
-        except IntegrityError:
-            return Response({"message": "Username already exists."})
-        
-class UserLoginAPI(APIView):
-    def post(self, request):
-        serializer = UserLoginSerializer(data=request.data)
-        if serializer.is_valid():
-            username = serializer.validated_data['username']
-            password = serializer.validated_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                token, created = Token.objects.get_or_create(user=user)
-                return Response({"token": token.key})
-            else:
-                return Response({"message": "Invalid credentials"})
-        return Response(serializer.errors)
 
+class UserSignupAPI(ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 class LocationAPI(ListCreateAPIView):
     queryset = Location.objects.all()
@@ -149,6 +128,9 @@ class GetSingleProductPriceAPI(ListCreateAPIView):
 
 class GetAllProductPriceAPI(ListCreateAPIView):
     serializer_class = PriceSerializer
+
+    def get_queryset(self):
+        pass
 
     def get(self, request, location_id, year=None, month=None, day=None):
         location = Location.objects.get(id=location_id)
