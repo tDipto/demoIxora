@@ -7,8 +7,6 @@ from django.contrib.auth.models import User
 
 
 ######################################################################## 
-
-
 class Product(models.Model):
     product_name = models.CharField(max_length=200)
     product_type = models.CharField(max_length=200)

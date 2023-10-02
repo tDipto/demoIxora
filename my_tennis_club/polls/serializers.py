@@ -71,6 +71,9 @@ from rest_framework import serializers
 
 class UserSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField(write_only=True, required=True)
+    email = serializers.EmailField(required=True)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
 
     class Meta:
         model = User
@@ -94,9 +97,9 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('confirm_password', None)
         user = User.objects.create_user(username=validated_data['username'], password=validated_data['password'])
-        user.email = validated_data['email']  # Handle email field
-        user.first_name = validated_data.get('first_name', '')  # Handle first_name field
-        user.last_name = validated_data.get('last_name', '')  # Handle last_name field
+        user.email = validated_data['email']  
+        user.first_name = validated_data['first_name'] 
+        user.last_name = validated_data['last_name']
         user.save()
         return user
 
